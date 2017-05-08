@@ -263,8 +263,7 @@ def main():
     # mod.fit(train_data=new_train_itr, eval_data=new_val_itr, eval_metric='acc',
     mod.fit(train_data=train_itr,  eval_data=val_itr, eval_metric='acc',
         batch_end_callback=mx.callback.Speedometer(batch_size=batch_size, frequent=100),  epoch_end_callback=A_utilities.epoc_end_callback_kp, optimizer='sgd',
-        optimizer_params={'learning_rate': 0.1, 'momentum': 0.9}, num_epoch=num_epoch)
-
+        optimizer_params={'learning_rate': 0.01, 'momentum': 0.9}, num_epoch=num_epoch)
 
 if __name__ == '__main__':
     main()

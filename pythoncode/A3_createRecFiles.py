@@ -8,7 +8,14 @@ python im2rec.py -h #for help
 import subprocess
 import os
 import settings
+import errno
 
+def silentremove(filename):
+    try:
+        os.remove(filename)
+    except OSError as e: # this would be "except OSError, e:" before Python 2.6
+        if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
+            raise #
 def makeLstFile(prefix, images_loc):
     """
     :param outputfile: name of the list file
@@ -16,11 +23,15 @@ def makeLstFile(prefix, images_loc):
     :return:
     """
     #the recursive means to walk through subfolders and give labels based on which folder image is in
-    subprocess.call("python ~/mxnet/tools/im2rec.py --list True --recursive True " + prefix + " " + images_loc, shell=True)
-    os.remove(prefix+"_test.lst")
-    os.remove(prefix+"_val.lst")
+    #NOTE im2rec does not accept .png files, in im2rec.py, change the following
+    #cgroup.add_argument('--exts', type=list, default=['.jpeg', '.jpg']
+    #to
+    #cgroup.add_argument('--exts', type=list, default=['.jpeg', '.jpg', '.png']
+    print subprocess.check_output("python ~/mxnet/tools/im2rec.py --list True --recursive True " + prefix + " " + images_loc, shell=True)
+    silentremove(prefix+"_test.lst")
+    silentremove(prefix+"_val.lst")
 
-    os.rename(os.path.join(prefix + "_train.lst"), os.path.join(root, prefix + ".lst"))
+    #os.rename(os.path.join(prefix + "_train.lst"), os.path.join(root, prefix + ".lst"))
 
 def makeRecFile(prefix, imageloc):
     """
