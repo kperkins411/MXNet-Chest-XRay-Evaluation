@@ -42,8 +42,11 @@ mxnet_images_test_normal_dir = mxnet_images_test_dir + "/normal"
 
 number_pages = 75
 
-#test with just 100 images, much-much faster
-run_test = True
+#test with just 20 images, much-much faster
+test_run = True
+test_images = 20    #default, may also test with at most number nodule images(nodule and normal)
+
+
 trainpercent = .7
 valpercent = .15
 testpercent = .15

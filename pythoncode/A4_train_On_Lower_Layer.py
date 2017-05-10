@@ -187,15 +187,15 @@ import logging
 import A_utilities
 
 def main():
-    batch_size = 16
-    num_epoch = 10
+    batch_size = 8
+    num_epoch = 100
 
     head = '%(asctime)-15s %(message)s'
 
     logging.basicConfig(level=logging.DEBUG, format=head)
 
-    get_model('http://data.mxnet.io/models/imagenet/resnet/50-layers/resnet-50', 0)
-    sym, arg_params, aux_params = mx.model.load_checkpoint('resnet-50', 0)
+    get_model('http://data.mxnet.io/models/imagenet/resnet/18-layers/resnet-18', 0)
+    sym, arg_params, aux_params = mx.model.load_checkpoint('resnet-18', 0)
 
     attr_dict_sym = sym.attr_dict()
 
@@ -216,7 +216,8 @@ def main():
     # first lets get up to the second to the last relu
     # look at the http://data.mxnet.io/models/imagenet/resnet/50-layers/resnet-50-symbol.json
     # downloaded with the model above to see what the layer names are
-    newsymbol = get_part_of_symbol(sym, layer_name="stage4_unit2_relu1_output")
+    #newsymbol = get_part_of_symbol(sym, layer_name="stage4_unit2_relu1_output")
+    newsymbol = get_part_of_symbol(sym, layer_name="flatten0_output")
 
     # now add a new head to it
     newsymbol = add_new_head(newsymbol, num_classes)
@@ -245,10 +246,10 @@ def main():
     mod.bind(for_training=True, data_shapes=train_itr.provide_data, label_shapes=train_itr.provide_label)
 
     # init params, including the new net
-    mod.init_params(initializer=mx.init.Xavier(rnd_type='gaussian', factor_type="in", magnitude=2))
+    mod.init_params(initializer=mx.init.Xavier(rnd_type='gaussian', factor_type="in", magnitude=2),force_init=True)
 
     # then set the orig net to orig params
-    mod.set_params(arg_params, aux_params, allow_missing=True)
+    mod.set_params(arg_params, aux_params, allow_missing=True, force_init=True)
     ########################################################################################################################
 
     # train_inputs, train_labels = get_module_outputs_and_labels(mod, train_itr)
@@ -263,7 +264,7 @@ def main():
     # mod.fit(train_data=new_train_itr, eval_data=new_val_itr, eval_metric='acc',
     mod.fit(train_data=train_itr,  eval_data=val_itr, eval_metric='acc',
         batch_end_callback=mx.callback.Speedometer(batch_size=batch_size, frequent=100),  epoch_end_callback=A_utilities.epoc_end_callback_kp, optimizer='sgd',
-        optimizer_params={'learning_rate': 0.01, 'momentum': 0.9}, num_epoch=num_epoch)
+        optimizer_params={'learning_rate': 0.001, 'momentum': 0.9}, num_epoch=num_epoch)
 
 if __name__ == '__main__':
     main()

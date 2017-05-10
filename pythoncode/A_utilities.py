@@ -1,3 +1,5 @@
+EVAL_ACC_TRAIN = 0
+EVAL_ACC_VAL = 1
 def epoc_end_callback_kp(epoch, symbol, arg_params, aux_params,epoch_train_eval_metrics):
     '''
     early stopping
@@ -12,13 +14,18 @@ def epoc_end_callback_kp(epoch, symbol, arg_params, aux_params,epoch_train_eval_
     :param epoch_train_eval_metrics:
     :return:
     '''
-    EVAL_ACC = 1
+
+    #TODO keep val
+    train_test_val = EVAL_ACC_VAL
+    #train_test_val = EVAL_ACC_TRAIN
     for key in epoch_train_eval_metrics.keys():
         for epoch in epoch_train_eval_metrics[key].keys():
             len1 = len(epoch_train_eval_metrics[key])-1
-            retval =  epoch_train_eval_metrics[key][len1][EVAL_ACC] < 1.0
+            retval =  epoch_train_eval_metrics[key][len1][train_test_val] < 1.0
 
             #TODO save model if retval == false
+            if retval == False:
+                print("100 % accuracy we should stop now")
 
             return retval
 
