@@ -194,8 +194,8 @@ def main():
 
     logging.basicConfig(level=logging.DEBUG, format=head)
 
-    get_model('http://data.mxnet.io/models/imagenet/resnet/18-layers/resnet-18', 0)
-    sym, arg_params, aux_params = mx.model.load_checkpoint('resnet-18', 0)
+    get_model('http://data.mxnet.io/models/imagenet/resnet/50-layers/resnet-50', 0)
+    sym, arg_params, aux_params = mx.model.load_checkpoint('resnet-50', 0)
 
     attr_dict_sym = sym.attr_dict()
 
