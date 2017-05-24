@@ -118,9 +118,10 @@ def add_new_head(headless_symbol, num_output_classes):
     # new_head = get_new_head(out_shape, num_output_classes)
 
     #what is the size of the output of symbol
-    new_symbol = mx.symbol.FullyConnected(data=headless_symbol, name='kp_fc1', num_hidden=128)
-    new_symbol = mx.symbol.FullyConnected(data=new_symbol, name='kp_fc2', num_hidden=64)
-    new_symbol = mx.symbol.FullyConnected(data=new_symbol, name='kp_fc3', num_hidden=num_output_classes)
+    new_symbol = mx.symbol.FullyConnected(data=headless_symbol, name='kp_fc1', num_hidden=512)
+    new_symbol = mx.symbol.FullyConnected(data=new_symbol, name='kp_fc2', num_hidden=256)
+    new_symbol = mx.symbol.FullyConnected(data=new_symbol, name='kp_fc3', num_hidden=128)
+    new_symbol = mx.symbol.FullyConnected(data=new_symbol, name='kp_fc4', num_hidden=num_output_classes)
     new_symbol = mx.symbol.SoftmaxOutput(data=new_symbol, name='softmax')
     return new_symbol
 
@@ -194,8 +195,8 @@ def main():
 
     logging.basicConfig(level=logging.DEBUG, format=head)
 
-    get_model('http://data.mxnet.io/models/imagenet/resnet/50-layers/resnet-50', 0)
-    sym, arg_params, aux_params = mx.model.load_checkpoint('resnet-50', 0)
+    get_model('http://data.mxnet.io/models/imagenet/inception-bn/Inception-BN', 126)
+    sym, arg_params, aux_params = mx.model.load_checkpoint('Inception-BN', 126)
 
     attr_dict_sym = sym.attr_dict()
 
@@ -217,7 +218,7 @@ def main():
     # look at the http://data.mxnet.io/models/imagenet/resnet/50-layers/resnet-50-symbol.json
     # downloaded with the model above to see what the layer names are
     #newsymbol = get_part_of_symbol(sym, layer_name="stage4_unit2_relu1_output")
-    newsymbol = get_part_of_symbol(sym, layer_name="flatten0_output")
+    newsymbol = get_part_of_symbol(sym, layer_name="flatten_output")
 
     # now add a new head to it
     newsymbol = add_new_head(newsymbol, num_classes)
