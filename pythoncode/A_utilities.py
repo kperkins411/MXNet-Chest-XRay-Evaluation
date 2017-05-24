@@ -1,5 +1,26 @@
-EVAL_ACC_TRAIN = 0
-EVAL_ACC_VAL = 1
+
+
+import mxnet as mx
+
+class HighestValidationHandler:
+    '''
+    tracks the highest validation accuracy
+    '''
+    def __init__(self):
+        self._highest_validation = 0.0
+    def test(self, new_validation):
+        if new_validation > self.highest_validation:
+            self.highest_validation = new_validation
+            return True
+        else:
+            return False
+    @property
+    def highest_validation(self):
+        return self._highest_validation
+
+
+r=HighestValidationHandler()
+
 def epoc_end_callback_kp(epoch, symbol, arg_params, aux_params,epoch_train_eval_metrics):
     '''
     early stopping
@@ -14,21 +35,26 @@ def epoc_end_callback_kp(epoch, symbol, arg_params, aux_params,epoch_train_eval_
     :param epoch_train_eval_metrics:
     :return:
     '''
+    EVAL_ACC_TRAIN = 0
+    EVAL_ACC_VAL = 1
 
-    #TODO keep val
-    train_test_val = EVAL_ACC_VAL
-    #train_test_val = EVAL_ACC_TRAIN
     for key in epoch_train_eval_metrics.keys():
         for epoch in epoch_train_eval_metrics[key].keys():
             len1 = len(epoch_train_eval_metrics[key])-1
-            retval =  epoch_train_eval_metrics[key][len1][train_test_val] < 1.0
+            val_acc = epoch_train_eval_metrics[key][len1][EVAL_ACC_VAL]
+            trn_acc = epoch_train_eval_metrics[key][len1][EVAL_ACC_TRAIN]
+            retval =  val_acc<1.0 and trn_acc<1.0
 
-            #TODO save model if retval == false
+            if r.test(val_acc)== True:
+                cb = mx.callback.do_checkpoint("FC_HEAD_PARAMS", period = 1)
+                cb(1,symbol,arg_params, aux_params)
+                print("Highest accuracy =%f"%r.highest_validation)
+
             if retval == False:
-                print("100 % accuracy we should stop now")
+                print("100 percent accuracy for %s stopping"%("val_acc" if val_acc>= 1.0 else "trn_acc"))
+                print("Highest accuracy =%f"%r.highest_validation)
 
             return retval
-
 
 def output_diffs(attr_dict_1, attr_dict_2, string_attr_dict1="1", string_attr_dict2= "2",showExcludedKeys=False, showTotalLengths = False):
     '''
