@@ -21,6 +21,9 @@ def clear_folder_files(dir):
         except Exception as e:
             print(e)
 
+RECORDIO_TRAIN_FILE = '../recordIO_dir/Train.rec'
+RECORDIO_VAL_FILE ='../recordIO_dir/Val.rec'
+RECORDIO_TEST_FILE ='../recordIO_dir/Test.rec'
 
 domain = 'https://openi.nlm.nih.gov'
 json_data_file = 'data_new.json'
@@ -43,7 +46,7 @@ mxnet_images_test_normal_dir = mxnet_images_test_dir + "/normal"
 number_pages = 75
 
 #test with just 20 images, much-much faster
-test_run = True
+test_run = False
 test_images = 20    #default, may also test with at most number nodule images(nodule and normal)
 
 
@@ -53,4 +56,4 @@ testpercent = .15
 
 #if datasets unbalanced (numb_nodule<<numb_normal) then make copies of nodule dataset
 #until numb_nodule==numb_normal
-force_balance = False
+force_balance = True
