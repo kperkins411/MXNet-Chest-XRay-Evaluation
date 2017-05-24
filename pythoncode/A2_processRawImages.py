@@ -246,11 +246,12 @@ def main():
 
     #the following assummes that we have at least twice as many normal as nodule so use number nodule total
     if settings.test_run == True:
-        print "Running test on " + str(numb_nodule) +" images"
         #numb_nodule = settings.test_images  #use just 20 images
         numb_normal = numb_nodule * 2  # use all original normal, we will double nodule by flipping each nodule image
         nodule_images_list = nodule_images_list[:numb_nodule]
         normal_images_list = normal_images_list[:numb_normal]
+    print "Running test on " + str(numb_nodule) + " images"
+
     # =======================================================================================================================
     #create separate directories for above classes and clear them if needed
     #part of making .rec file for mxnet
