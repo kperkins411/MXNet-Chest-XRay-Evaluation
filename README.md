@@ -1,8 +1,9 @@
-# Xvision (Mxnet port of tensorflow repo found at ayush1997/Xvision using Resnet-50)
+# Mxnet - Deep Learning analysis of Chest XRays 
+(port and enhancement of tensorflow repo found at ayush1997/Xvision using Resnet-50)
 
-Chest Xray image analysis using **Deep Learning** and  exploiting **Deep Transfer Learning** technique for it with MxNet.
+Chest Xray image analysis using  **Deep Transfer Learning** technique.  Written in python for MxNet deeplearning framework.
 
-The **stage4_unit2_relu1_output** layer of the pretrained Resnet-50 was stripped away and a new 2 layer fully connected neural net was added on top to convert it to a classifier of **Normal vs Nodular** Chest Xray Images.
+Summary: The **flatten_output** layer of the pretrained Inception-BN was stripped away and a new 3 layer fully connected neural net was added on top to convert it to a classifier of **Normal vs Nodular** Chest Xray Images.
 
 ## Nodular vs Normal Chest Xray
 <img src="https://github.com/ayush1997/Xvision/blob/master/image/node.jpg" width="300" height="300" />
@@ -12,13 +13,13 @@ The **stage4_unit2_relu1_output** layer of the pretrained Resnet-50 was stripped
 
 | Property      |Values         |
 | ------------- | ------------- |
-| Pretrained Model | VggNet-16  |
+| Pretrained Model | Inception BN  |
 | Optimizer used  | stochastic gradient descent(SGD)  |
-| Learning rate  | 0.01|  
-|Mini Batch Size| 32 |
-| Epochs | 20 |
-|2 Layers| 512x512 |
-|GPU trained on| Nvidia GEFORCE 920M|
+| Learning rate  | 0.01 (network is very sensitive, LR=.1 and it never converges)|  
+|Mini Batch Size| 16 |
+| Epochs | trained until reach 100% on training set, used network with best validation score |
+|3 new FC Layers| 512x256x128 |
+|GPU trained on| Nvidia GEFORCE GTX 960M|
 
 ## Evaluation
 ### Confusion Matrix and Training Error Graph
@@ -37,32 +38,41 @@ The **stage4_unit2_relu1_output** layer of the pretrained Resnet-50 was stripped
 [openi.nlm.nih.gov](https://openi.nlm.nih.gov/gridquery.php?q=&it=x,xg&sub=x&m=1&n=101) has a large base of Xray,MRI, CT scan images publically available.Specifically Chest Xray Images have been scraped, Normal and Nodule labbeled images are futher extrated for this task.
 
 ## How to use ?
-The above code can be used for **Deep Transfer Learning** on any Image dataset to train using Resnet as the PreTrained network. 
+The above code can be used for **Deep Transfer Learning** on any Image dataset to train using Inception-BN as the PreTrained network. You can also use any of the models in the MXNet model library to run this code.  It has been tested with Resnet-34 and resnet-50 as well
 ### Steps to follow 
 
-1. Download Data- the script download images and saves corresponding disease label in json format.
+1. Get images- Goes to NLM website and recursively walks all pages downloading images and metadata, the images go in "../images_all" the metadata goes in a json file defined in settings.json_data_file. 
 
-  ```python scraper.py <path/to/folder/to/save/images>```
+  ```python A1_getRawImages.py```
 
-2. Follow the ```scraper/process.ipynb``` notebook for Data processing and generate
+2. Now seperate and balance the dataset (there are about 2706 normal images and 211 nodule ones roughly 13 to 1).  So flip and copy the nodule set so that they are roughly equivelant.  Then break into train,test,val sets (.7, .15,.15).
+Copy them to seperate folders 
+    ../images_Train/nodule
+    ../images_Train/nodule
+and likewise for test and Val
 
-  * Training images folder - All images for training
-  * Testing images Folder - All images for testing
-  * Training image labels file - Pickled file with training labels
-  * Testing image labels file - Pickled file with testing labels
+```python A2_processRawImages.py```
 
-3. Extract features(**CNN Codes**) from the **maxpool:5** layer of PreTrained CovNet(VggNet) and save them beforehand for faster training of Neural network.
+3. Create RecordIO files that contain efecient, concatenated binary files consisting of all images in a particular category (train, test, val)
 
-    ```python train.py <Training images folder> <Testing image folder> <Train images codes folder > <Test images codes folder>```
+```python A3_createRecFiles.py```
 
-4.  The extracted features are now used for training our **2-Layer Neural Network** from scratch.The computed models are saved as tensorflow checkpoint after every **Epoch**.
+4. Now the heavy lifting, 
+    take a pretrained deep conv net (Inception, Resnet etc.) and strip off the final fully connected layer to form headless         CNN
+    Run train and validation images through headless CNN and gather all the outputs, these are called CNN codes, 
+    Use CNN codes to train a brand new 3 layer fully connected neural net (converges quickly). This is necessary because          mxnet has no way to freeze layers at this point, plus its much faster to train)
+    then append that TRAINED fully connected neural net onto the headless CNN and train the complete net a little (converges         quickly).  
+    then save the best complete net (use A_utilities.epoc_end_callback_kp(...) in the fit function.  Whenever accuracy             exceeds previous record save the net.
+    Finaly reload complete net and test on validation data
+    
+    ```python A4_freeze_all_but_last_layer.py```
+    
+  
+
+
 
     ```python train_model.py <Training images folder> <Train images codes folder> <Training image labels file> <Folder to         save models>```
 
-5.  Finally the saved models are used for making predictions.Confusion Matrix is used as the Performance Metrics for this classifcation task.
-
-    ```python test_model.py <Testing images folder> <Test images codes folder> <Testing image labels file> <Folder with saved
-    models>```
 
 ## Some Predictions
 
