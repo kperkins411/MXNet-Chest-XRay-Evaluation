@@ -13,13 +13,13 @@ Summary: The **flatten_output** layer of the pretrained Inception-BN was strippe
 
 | Property      |Values         |
 | ------------- | ------------- |
-| Pretrained Model | VggNet-16  |
+| Pretrained Model | Inception BN  |
 | Optimizer used  | stochastic gradient descent(SGD)  |
-| Learning rate  | 0.01|  
-|Mini Batch Size| 32 |
-| Epochs | 20 |
-|2 Layers| 512x512 |
-|GPU trained on| Nvidia GEFORCE 920M|
+| Learning rate  | 0.01 (network is very sensitive, LR=.1 and it never converges)|  
+|Mini Batch Size| 16 |
+| Epochs | trained until reach 100% on training set, used network with best validation score |
+|3 new FC Layers| 512x256x128 |
+|GPU trained on| Nvidia GEFORCE GTX 960M|
 
 ## Evaluation
 ### Confusion Matrix and Training Error Graph
