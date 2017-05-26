@@ -1,12 +1,9 @@
 # Mxnet - Deep Learning analysis of Chest XRays 
 (port and enhancement of tensorflow repo found at ayush1997/Xvision using Resnet-50)
 
-Chest Xray image analysis using **Deep Learning** and  exploiting **Deep Transfer Learning** technique using MxNet.
+Chest Xray image analysis using  **Deep Transfer Learning** technique.  Written in python for MxNet deeplearning framework.
 
-The **flatten_output** layer of the pretrained Inception-BN was stripped away and a new 3 layer fully connected neural net was added on top to convert it to a classifier of **Normal vs Nodular** Chest Xray Images.
-
-This was done in stages:
-
+Summary: The **flatten_output** layer of the pretrained Inception-BN was stripped away and a new 3 layer fully connected neural net was added on top to convert it to a classifier of **Normal vs Nodular** Chest Xray Images.
 
 ## Nodular vs Normal Chest Xray
 <img src="https://github.com/ayush1997/Xvision/blob/master/image/node.jpg" width="300" height="300" />
