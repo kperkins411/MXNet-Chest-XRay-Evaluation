@@ -1,4 +1,5 @@
-# Mxnet port of tensorflow repo found at ayush1997/Xvision using Resnet-50
+# Mxnet - Deep Learning analysis of Chest XRays 
+(port and enhancement of tensorflow repo found at ayush1997/Xvision using Resnet-50)
 
 Chest Xray image analysis using **Deep Learning** and  exploiting **Deep Transfer Learning** technique using MxNet.
 
