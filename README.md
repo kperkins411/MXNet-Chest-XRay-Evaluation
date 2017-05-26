@@ -23,7 +23,7 @@ Summary: The **flatten_output** layer of the pretrained Inception-BN was strippe
 
 ## Evaluation
 
-**Accuracy** : **72.02 % **
+**Accuracy** : **72.02 %**
 
 ## DataSet
 [openi.nlm.nih.gov](https://openi.nlm.nih.gov/gridquery.php?q=&it=x,xg&sub=x&m=1&n=101) has a large base of Xray,MRI, CT scan images publically available.Specifically Chest Xray Images have been scraped, Normal and Nodule labbeled images are futher extrated for this task.
