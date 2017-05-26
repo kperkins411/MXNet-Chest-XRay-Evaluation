@@ -58,7 +58,7 @@ and likewise for test and Val
     
     ```python A4_freeze_all_but_last_layer.py```
 
-## To make it better
+## Improvements?
 
 > 1. This is a binary classifier, there is no attempt to segment the lungs, this pretraining step may help imensily
 > 2. More data
