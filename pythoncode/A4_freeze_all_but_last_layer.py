@@ -3,8 +3,51 @@
 import mxnet as mx
 import settings
 import numpy as np
+import json
+import logging
+import A_utilities
 
 
+###################
+# UTILITIES
+###################
+# download a pretrained 50-layer ResNet model and load into memory.
+# Note. If load_checkpoint reports error, we can remove the downloaded files and try get_model again.
+import os, urllib
+
+
+def download(url):
+    filename = url.split("/")[-1]
+    if not os.path.exists(filename):
+        urllib.urlretrieve(url, filename)
+
+
+def get_model(prefix, epoch):
+    download(prefix + '-symbol.json')
+    download(prefix + '-%04d.params' % (epoch,))
+
+
+# read/write a dict to a file
+# used for serializing CNNcodes (output of headless CNN) for later training fully connected net
+def writeDict(myDict, name):
+    with open(name, "w") as outfile:
+        json.dump(myDict, outfile, indent=4)
+
+
+def readDict(name):
+    try:
+        with open(name, "r") as infile:
+            dictValues = json.load(infile)
+            return (dictValues)
+    except IOError as e:
+        print(e)
+        raise
+    except ValueError as e:
+        print(e)
+        raise
+###################
+# iterators
+###################
 def get_iterator(batch_size,
                  data_shape=(3, 224, 224),
                  path_imgrec=settings.RECORDIO_TRAIN_FILE,
@@ -33,45 +76,9 @@ def get_iterator(batch_size,
         rand_mirror=rand_mirror,
         mean_img=mean_img)
 
-#define the function which returns the data iterators.
-def get_iterators(batch_size, data_shape=(3, 224, 224)):
-    # first create the directory for lst and rec files
-    root = os.path.abspath(os.path.dirname(__file__))
-    recordIODir = os.path.join(root, settings.record_IO_directory)
-    train  = os.path.join(recordIODir, 'Train.rec')
-    val = os.path.join(recordIODir, 'Val.rec')
-
-    train = mx.io.ImageRecordIter(
-        path_imgrec         = settings.RECORDIO_TRAIN_FILE,
-        data_name           = 'data',
-        label_name          = 'softmax_label',
-        batch_size          = batch_size,
-        data_shape          = data_shape,
-        shuffle             = True,
-        rand_crop           = True,
-        rand_mirror         = True,
-        mean_img           = "../recordIO_dir/mean.bin")
-    val = mx.io.ImageRecordIter(
-        path_imgrec         = settings.RECORDIO_VAL_FILE,
-        data_name           = 'data',
-        label_name          = 'softmax_label',
-        batch_size          = batch_size,
-        data_shape          = data_shape,
-        rand_crop           = False,
-        rand_mirror         = False,
-        mean_img="../recordIO_dir/mean.bin")
-    test = mx.io.ImageRecordIter(
-        path_imgrec=settings.RECORDIO_TEST_FILE,
-        data_name='data',
-        label_name='softmax_label',
-        batch_size=batch_size,
-        data_shape=data_shape,
-        rand_crop=False,
-        rand_mirror=False,
-        mean_img="../recordIO_dir/mean.bin")
-    return (train, val,test)
-
-
+######################################
+# symbol and model manipulation
+######################################
 def get_part_of_symbol(symbol, layer_name):
     """
     a function which chops out all layers after layer_name
@@ -88,10 +95,10 @@ def get_part_of_symbol(symbol, layer_name):
     return (new_symbol)
 
 def get_new_head(num_inputs, num_outputs):
-    '''
-    :param num_inputs:
-    :param num_outputs:
-    :return:
+    ''' creates a FC net
+    :param num_inputs:  inputs to net
+    :param num_outputs:   ooutputs from net
+    :return: symbol
     '''
     new_head = mx.sym.Variable('data')
     new_head = mx.sym.FullyConnected(data=new_head, name='fc1', num_hidden=num_inputs)
@@ -127,83 +134,9 @@ def add_new_head(headless_symbol, num_output_classes):
     new_symbol = mx.symbol.SoftmaxOutput(data=new_symbol, name='softmax')
     return new_symbol
 
-
-# def get_module_outputs_and_labels(mod, itr):
-#     '''
-#     Takes a pretrained partial model (hack off part of the end), and runs data from recIO file
-#     through it store models outputs and symbols
-#     Use to train a fully connected neural net
-#
-#     :param mod: the hacked module
-#     :param itr: an iterator for the data
-#     :return:
-#     '''
-#     # a lot of the below came from base_module.predict
-#     # I set the batch size to 1 so I would not have to deal with padding nor iterate over outputs
-#
-#     # get an iterator
-#     # itr = get_iterator(batch_size=1, path_imgrec = path_imgrec )
-#
-#     # where results go
-#     outputs = []
-#     labels = []
-#
-#     itr.reset()
-#
-#     #iterate through and get the output of the module given the input
-#     #also collect the proper label
-#     for eval_batch in itr:
-#         # what is this batch supposed to be
-#         label = eval_batch.label[0].asnumpy()[0]
-#         labels.append(label)
-#
-#         # same as the following
-#         mod.forward(eval_batch, is_train=False)
-#         out = mod.get_outputs()[0].asnumpy()[0] #returns output on GPU
-#         # outcpu = out.as_in_context(eval_batch.context)
-#         # toutputs = type(out)
-#         # out = np.asarray(mod.get_outputs())
-#         # out2= out1.asnumpy()
-#         #The following does the entire iterator
-#         # out = mod.predict(itr, merge_batches=False)
-#         outputs.append(out)
-#
-#     # outputs2 = mod.predict(itr, merge_batches=False)
-#     return np.asarray(outputs),np.asarray(labels)
-
-
-
-# download a pretrained 50-layer ResNet model and load into memory.
-# Note. If load_checkpoint reports error, we can remove the downloaded files and try get_model again.
-import os, urllib
-def download(url):
-    filename = url.split("/")[-1]
-    if not os.path.exists(filename):
-        urllib.urlretrieve(url, filename)
-def get_model(prefix, epoch):
-    download(prefix+'-symbol.json')
-    download(prefix+'-%04d.params' % (epoch,))
-
-####################################################################################
-
-
-import json
-def writeDict(myDict, name):
-    with open(name, "w") as outfile:
-        json.dump(myDict, outfile, indent=4)
-
-def readDict(name):
-    try:
-        with open(name, "r") as infile:
-            dictValues = json.load(infile)
-            return(dictValues)
-    except IOError as e:
-        print(e)
-        raise
-    except ValueError as e:
-        print(e)
-        raise
-
+######################################
+# eval and train
+######################################
 def getHeadlessConvOutputs(mod, path_imgrec = settings.RECORDIO_TRAIN_FILE):
     '''
 
@@ -248,8 +181,59 @@ def getHeadlessConvOutputs(mod, path_imgrec = settings.RECORDIO_TRAIN_FILE):
     Labels = np.asarray(Labels)
     return Outputs,Labels
 
-import logging
-import A_utilities
+def create_CNN_codes(CnnCodes, arg_params,aux_params):
+    '''
+    :param CnnCodes: symbol. orig conv net with some layer (probably just FC one) removed
+    :param arg_params: orig conv net weights, biases
+    :param aux_params: orig conv net batch norm params
+
+    '''
+    # create a module using CNNCodes only
+    orig_CNN_mod = mx.mod.Module(symbol=CnnCodes, label_names=None, context=mx.gpu())
+    orig_CNN_mod.bind(for_training=False, data_shapes=[('data', (1, 3, 224, 224))])
+
+    # init params, including the new net
+    orig_CNN_mod.init_params(initializer=mx.init.Xavier(rnd_type='gaussian', factor_type="in", magnitude=2),
+                             force_init=True)
+    # then set the orig net to orig params
+    orig_CNN_mod.set_params(arg_params, aux_params, allow_missing=True, force_init=True)
+
+    # get what the headless conv outputs, and the correct labels
+    train_outputs, train_labels = getHeadlessConvOutputs(orig_CNN_mod, path_imgrec=settings.RECORDIO_TRAIN_FILE)
+    test_outputs, test_labels = getHeadlessConvOutputs(orig_CNN_mod, path_imgrec=settings.RECORDIO_TEST_FILE)
+    return(train_outputs, train_labels,test_outputs, test_labels)
+
+def create_and_train_FC_net(train_outputs, train_labels,test_outputs, test_labels, batch_size, num_classes, num_epoch):
+    '''
+    creates and trains a FC net using CNNCodes as inputs, will save the best model in epoch_end_callback
+    :param train_outputs:
+    :param train_labels:
+    :param test_outputs:
+    :param test_labels:
+    :param batch_size:
+    :param num_classes:
+    :param num_epoch:
+    :return: nothing, fit has an epoch end callback to check if we have best validation score, if so this FC networks
+            params are saved to A_utilities.paramFile
+    '''
+
+
+
+    # create  iterators from above data
+    FC_Training_iter = mx.io.NDArrayIter(data=train_outputs, label=train_labels, batch_size=batch_size, shuffle=True)
+    FC_Test_iter = mx.io.NDArrayIter(data=test_outputs, label=test_labels, batch_size=batch_size, shuffle=True)
+
+     # create a stand alone FC net to train on above iterators
+    new_head_symbol = get_new_head(num_inputs=train_outputs.shape[1], num_outputs=num_classes)
+    model = mx.mod.Module(context=mx.gpu(), symbol=new_head_symbol)
+
+    # train the FC net, saving the best model
+    model.fit(train_data=FC_Training_iter, eval_data=FC_Test_iter, eval_metric='acc',
+              batch_end_callback=mx.callback.Speedometer(batch_size=batch_size, frequent=100),
+              epoch_end_callback=A_utilities.epoc_end_callback_kp, optimizer='sgd',
+              optimizer_params={'learning_rate': 0.01, 'momentum': 0.9}, num_epoch=num_epoch, force_rebind=True,
+              initializer=mx.init.Xavier(rnd_type='gaussian', factor_type="in", magnitude=2))
+
 
 def main():
     num_epoch = 1000
@@ -258,98 +242,101 @@ def main():
     num_gpus = 1
     batch_size = batch_per_gpu * num_gpus
 
+    best_FC_modelname = "BEST_FC_MODEL"
+    best_CNN_FC_modelname = "BEST_CNN_FC_MODEL"
+
+    train_FC = False
+    train_CNN_FC = False
+
     head = '%(asctime)-15s %(message)s'
     logging.basicConfig(level=logging.DEBUG, format=head)
+
+    # mx.profiler.profiler_set_config(mode='all', filename='profile_output.json')
+    # mx.profiler.profiler_set_state('run')
 
     #load model
     get_model('http://data.mxnet.io/models/imagenet/inception-bn/Inception-BN', 126)
     sym, arg_params, aux_params = mx.model.load_checkpoint('Inception-BN', 126)
 
+    ################### CNNCODES and FC head training
     # get partial network, exclude last FC layer
     # look at *.json file downloaded with the model above to see what the layer names are
     CnnCodes = get_part_of_symbol(sym, layer_name="flatten_output")
 
-    #strip out params that only apply to old model
+    #strip out params that only apply to CnnCodes
     arg_params, aux_params = A_utilities.strip_obsolete_params(arg_params = arg_params,aux_params=aux_params ,
                                                                new_symbol=CnnCodes)
 
-    # add a new FC layer
-    # newsymbol = add_new_head(CnnCodes, num_classes)
+    #use old stuff?
+    if train_FC == True or os.path.exists(best_FC_modelname+'-00002.params'):
+        #get outputs of headless CNN usong Train and Val dataset
+        train_outputs, train_labels, test_outputs, test_labels = create_CNN_codes(CnnCodes, arg_params,aux_params)
 
-    # create a module using CNNCodes only
-    orig_CNN_mod = mx.mod.Module(symbol=CnnCodes, label_names = None, context=mx.gpu())
-    orig_CNN_mod.bind(for_training=False,data_shapes=[('data', (1,3,224,224))])
+        # where will best model be written?
+        A_utilities.reset_epoch_end_callback(best_FC_modelname)
 
-    #init params, including the new net
-    orig_CNN_mod.init_params(initializer=mx.init.Xavier(rnd_type='gaussian', factor_type="in", magnitude=2),force_init=True)
+        #now train FC net on above outputs, save best model to
+        create_and_train_FC_net(train_outputs, train_labels, test_outputs, test_labels,batch_size, num_classes, num_epoch)
 
-    # then set the orig net to orig params
-    orig_CNN_mod.set_params(arg_params, aux_params, allow_missing=True, force_init=True)
+    ################### combine headless trained CNN and trained FC net
 
-    #get what the headless conv outputs, and the correct labels
-    train_outputs,train_labels = getHeadlessConvOutputs(orig_CNN_mod,path_imgrec= settings.RECORDIO_TRAIN_FILE)
-    test_outputs, test_labels = getHeadlessConvOutputs(orig_CNN_mod,path_imgrec= settings.RECORDIO_TEST_FILE)
+    #get train iterators
+    train_itr = get_iterator(batch_size, path_imgrec=settings.RECORDIO_TRAIN_FILE)
+    test_itr = get_iterator(batch_size, path_imgrec=settings.RECORDIO_TEST_FILE)
 
-    #create  iterators from that data
-    FC_Training_iter = mx.io.NDArrayIter(data=train_outputs, label=train_labels, batch_size=batch_size, shuffle=True)
-    FC_Test_iter = mx.io.NDArrayIter(data=test_outputs, label=test_labels, batch_size=batch_size, shuffle=True)
-
-    ##################################################
-    #create a FC net
-    new_head_symbol = get_new_head(num_inputs = train_outputs.shape[1], num_outputs = num_classes)
-    model = mx.mod.Module(context=mx.gpu(), symbol=new_head_symbol)
-
-    model.bind(for_training=True, data_shapes=FC_Training_iter.provide_data)
-    # init params, including the new net
-    model.init_params(initializer=mx.init.Xavier(rnd_type='gaussian', factor_type="in", magnitude=2),
-                             force_init=True)
-
-    #train the FC net, saving the best model
-    model.fit(train_data=FC_Training_iter, eval_data=FC_Test_iter, eval_metric='acc',
-              batch_end_callback=mx.callback.Speedometer(batch_size=batch_size, frequent=100),
-              epoch_end_callback=A_utilities.epoc_end_callback_kp, optimizer='sgd',
-              optimizer_params={'learning_rate': 0.01, 'momentum': 0.9}, num_epoch=num_epoch, force_rebind=True,
-              initializer=mx.init.Xavier(rnd_type='gaussian', factor_type="in", magnitude=2))
-
-    ##################################################
-    #first get best FC layer
-    fc_sym, fc_arg_params, fc_aux_params = mx.model.load_checkpoint('FC_HEAD_PARAMS', 2)
+    #now load the best FC layer from file system
+    fc_sym, fc_arg_params, fc_aux_params = mx.model.load_checkpoint(best_FC_modelname, 2)
 
     #then tape FC net to headless Conv net
     cnn_plus_newhead = fc_sym(data = CnnCodes,name= "cnn_plus_newhead")
 
     #create model
-    cnn_plus_newhead_mod = mx.mod.Module(symbol=cnn_plus_newhead, label_names=None, context=mx.gpu())
-
-    #get some iterators
-    train_itr = get_iterator(batch_size, path_imgrec='../recordIO_dir/Train.rec')
-    val_itr = get_iterator(batch_size, path_imgrec='../recordIO_dir/Val.rec')
+    cnn_plus_newhead_mod = mx.mod.Module(symbol=cnn_plus_newhead,  context=mx.gpu())
 
     #bind
     cnn_plus_newhead_mod.bind(for_training=True, data_shapes=train_itr.provide_data, label_shapes=train_itr.provide_label)
-
-    #default init
-    # cnn_plus_newhead_mod.init_params(initializer=mx.init.Xavier(rnd_type='gaussian', factor_type="in", magnitude=2), force_init=True)
 
     #set params CNN part then FC part
     cnn_plus_newhead_mod.set_params(arg_params, aux_params, allow_missing=True, force_init=False)
     cnn_plus_newhead_mod.set_params(fc_arg_params, fc_aux_params, allow_missing=True, force_init=True)
 
-    cnn_plus_newhead_mod.fit(train_data=train_itr, eval_data=val_itr, eval_metric='acc',
-              batch_end_callback=mx.callback.Speedometer(batch_size=batch_size, frequent=100),
-              epoch_end_callback=A_utilities.epoc_end_callback_kp, optimizer='sgd',
-              optimizer_params={'learning_rate': 0.01, 'momentum': 0.9}, num_epoch=num_epoch)
+    ################### now end to end training on almost there net
+    # use old stuff?
+    if train_CNN_FC == True or os.path.exists(best_CNN_FC_modelname + '-00002.params'):
+        # where will results be written?
+        A_utilities.reset_epoch_end_callback(best_CNN_FC_modelname)
 
+        #train end to end model
+        cnn_plus_newhead_mod.fit(train_data=train_itr, eval_data=test_itr, eval_metric='acc',
+                  batch_end_callback=mx.callback.Speedometer(batch_size=batch_size, frequent=100),
+                  epoch_end_callback=A_utilities.epoc_end_callback_kp, optimizer='sgd',
+                  optimizer_params={'learning_rate': 0.01, 'momentum': 0.9}, num_epoch=num_epoch)
 
+    ################### now lets see how it works on validation dataset
+    ##BTW the following is what you want to use if you put this on the web
+    #except you want to predict 1 image at a time
 
-    #train end to end
+    # now load the best end to end model from file system
+    cnn_fc_sym, cnn_fc_arg_params, cnn_fc_aux_params = mx.model.load_checkpoint(best_CNN_FC_modelname, 2)
 
-    #save params
+    #get iterator
+    val_itr = get_iterator(batch_size, path_imgrec=settings.RECORDIO_VAL_FILE)
 
+    # create model
+    cnn_plus_newhead_mod = mx.mod.Module(symbol=cnn_fc_sym, context=mx.gpu())
 
+    # bind
+    cnn_plus_newhead_mod.bind(for_training=False, data_shapes=test_itr.provide_data,
+                              label_shapes=test_itr.provide_label)
 
+    # set params
+    cnn_plus_newhead_mod.set_params(cnn_fc_arg_params, cnn_fc_aux_params,allow_missing=False,force_init=True)
 
+    #the raw softmax outputs
+    outputs = cnn_plus_newhead_mod.predict(test_itr, ['mse', 'acc']).asnumpy()
 
+    score = cnn_plus_newhead_mod.score(test_itr, ['mse', 'acc', 'F1'])
+    print score
 
 if __name__ == '__main__':
     main()
