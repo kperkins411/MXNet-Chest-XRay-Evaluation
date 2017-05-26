@@ -6,8 +6,8 @@ Chest Xray image analysis using  **Deep Transfer Learning** technique.  Written 
 Summary: The **flatten_output** layer of the pretrained Inception-BN was stripped away and a new 3 layer fully connected neural net was added on top to convert it to a classifier of **Normal vs Nodular** Chest Xray Images.
 
 ## Nodular vs Normal Chest Xray
-<img src="https://github.com/kperkins411/Xvision_Mxnet/Images/nodule.png" width="300" height="300" />
-<img src="https://github.com/kperkins411/Xvision_Mxnet/Images/normal.png" width="300" height="300" />
+<img src="https://github.com/kperkins411/Xvision_Mxnet/images/nodule.png" width="300" height="300" />
+<img src="https://github.com/kperkins411/Xvision_Mxnet/images/normal.png" width="300" height="300" />
 
 ## Some specifications
 
