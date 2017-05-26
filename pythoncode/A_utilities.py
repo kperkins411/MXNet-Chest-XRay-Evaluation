@@ -2,24 +2,34 @@
 
 import mxnet as mx
 
-class HighestValidationHandler:
+class HighestValidationHandler(object):
     '''
-    tracks the highest validation accuracy
+    keeps track of highest validation accuracy
     '''
     def __init__(self):
+        self.reset()
+
+    def reset(self):
         self._highest_validation = 0.0
+
     def test(self, new_validation):
-        if new_validation > self.highest_validation:
-            self.highest_validation = new_validation
-            return True
-        else:
-            return False
+        retval = new_validation > self._highest_validation
+        if retval == True:
+            self._highest_validation = new_validation
+        return retval
+
     @property
     def highest_validation(self):
         return self._highest_validation
 
 
 r=HighestValidationHandler()
+paramFile= "AAAAA"
+
+def reset_epoch_end_callback(dest_file = paramFile):
+    global paramFile,r
+    paramFile = dest_file
+    r.reset()
 
 def epoc_end_callback_kp(epoch, symbol, arg_params, aux_params,epoch_train_eval_metrics):
     '''
@@ -46,7 +56,7 @@ def epoc_end_callback_kp(epoch, symbol, arg_params, aux_params,epoch_train_eval_
             retval =  val_acc<1.0 and trn_acc<1.0
 
             if r.test(val_acc)== True:
-                cb = mx.callback.do_checkpoint("FC_HEAD_PARAMS", period = 1)
+                cb = mx.callback.do_checkpoint(paramFile, period = 1)
                 cb(1,symbol,arg_params, aux_params)
                 print("Highest accuracy =%f"%r.highest_validation)
 
@@ -98,11 +108,11 @@ def output_diffs(attr_dict_1, attr_dict_2, string_attr_dict1="1", string_attr_di
 def strip_obsolete_params(arg_params,aux_params , new_symbol):
     '''
     arg_params and aux_params contain params from COMPLETE model zoo trained neural net
-    we are going to strip part of that model and add a new head
+    new_symbol contains a subset of that model
 
     this function will remove all keys from arg_params or aux_params that
-    contain stripped content.
-    So if key in arg_params or aux_params and NOT in new_symbol
+    do not apply to new_symbol
+    IOW if key in arg_params or aux_params and NOT in new_symbol
     then delete that key from arg_params or aux_params
 
     :param arg_params: original models params
