@@ -1,9 +1,9 @@
-# Mxnet - Deep Learning analysis of Chest XRays 
+# Mxnet - Deep Learning analysis of Chest X-Rays 
 (port and enhancement of tensorflow repo found at ayush1997/Xvision using Resnet-50)
 
-Chest Xray image analysis using  **Deep Transfer Learning** technique.  Written in python for MxNet deeplearning framework.
+Chest X-Ray image analysis using  **Deep Transfer Learning** technique.  Written in python for MxNet deeplearning framework.
 
-Summary: The **flatten_output** layer of the pretrained Inception-BN was stripped away and a new 3 layer fully connected neural net was added on top to convert it to a classifier of **Normal vs Nodular** Chest Xray Images.
+Summary: The **flatten_output** layer of the pretrained Inception-BN was stripped away and a new 3 layer fully connected neural net was added on top to convert it to a classifier of **Normal vs Nodular** Chest X-Ray Images.
 
 ## Nodular vs Normal Chest Xray
 <img src="https://github.com/kperkins411/XVision_Mxnet/blob/master/images/nodule.png" width="300" height="300" />
@@ -26,10 +26,10 @@ Summary: The **flatten_output** layer of the pretrained Inception-BN was strippe
 **Accuracy** : **72.02 %**
 
 ## DataSet
-[openi.nlm.nih.gov](https://openi.nlm.nih.gov/gridquery.php?q=&it=x,xg&sub=x&m=1&n=101) has a large base of Xray,MRI, CT scan images publically available.Specifically Chest Xray Images have been scraped, Normal and Nodule labbeled images are futher extrated for this task.
+[openi.nlm.nih.gov](https://openi.nlm.nih.gov/gridquery.php?q=&it=x,xg&sub=x&m=1&n=101) has a large base of X-Ray,MRI, CT scan images publically available.Specifically Chest Xray dataset used.
 
 ## How to use ?
-This code can be used for **Deep Transfer Learning** on any XRAY dataset to train using Inception-BN as the PreTrained network. You can also use any of the models in the MXNet model library to run this code.  It has been tested with Resnet-34 and resnet-50 as well
+This code can be used for **Deep Transfer Learning** on any X-Ray dataset to train using Inception-BN as the PreTrained network. You can also use any of the models in the MXNet model library to run this code.  It has been tested with Resnet-34 and resnet-50 as well.
 ### Steps to follow 
 
 1. Get images- Goes to NLM website and recursively walks all pages downloading images and metadata, the images go in "../images_all" the metadata goes in a json file defined in settings.json_data_file. 
@@ -63,5 +63,6 @@ and likewise for test and Val
 > 1. This is a binary classifier, there is no attempt to segment the lungs, this pretraining step may help imensily
 > 2. More data
 > 3. Deeper network (Resnet 150 maybe?)
+> 4. Localization, where nodules are located
 
 
