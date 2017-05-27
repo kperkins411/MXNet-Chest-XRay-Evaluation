@@ -1,13 +1,13 @@
-# Mxnet - Deep Learning analysis of Chest XRays 
+# Mxnet - Deep Learning analysis of Chest X-Rays 
 (port and enhancement of tensorflow repo found at ayush1997/Xvision using Resnet-50)
 
-Chest Xray image analysis using  **Deep Transfer Learning** technique.  Written in python for MxNet deeplearning framework.
+Chest X-Ray image analysis using  **Deep Transfer Learning** technique.  Written in python for MxNet deeplearning framework.
 
-Summary: The **flatten_output** layer of the pretrained Inception-BN was stripped away and a new 3 layer fully connected neural net was added on top to convert it to a classifier of **Normal vs Nodular** Chest Xray Images.
+Summary: The **flatten_output** layer of the pretrained Inception-BN was stripped away and a new 3 layer fully connected neural net was added on top to convert it to a classifier of **Normal vs Nodular** Chest X-Ray Images.
 
 ## Nodular vs Normal Chest Xray
-<img src="https://github.com/ayush1997/Xvision/blob/master/image/node.jpg" width="300" height="300" />
-<img src="https://github.com/ayush1997/Xvision/blob/master/image/normal.jpg" width="300" height="300" />
+<img src="https://github.com/kperkins411/XVision_Mxnet/blob/master/images/nodule.png" width="300" height="300" />
+<img src="https://github.com/kperkins411/XVision_Mxnet/blob/master/images/normal.png" width="300" height="300" />
 
 ## Some specifications
 
@@ -22,23 +22,14 @@ Summary: The **flatten_output** layer of the pretrained Inception-BN was strippe
 |GPU trained on| Nvidia GEFORCE GTX 960M|
 
 ## Evaluation
-### Confusion Matrix and Training Error Graph
 
-<img src="https://github.com/ayush1997/Xvision/blob/master/image/cfm.jpg" width="450" height="400" />
-<img src="https://github.com/ayush1997/Xvision/blob/master/image/nodule.jpg" width="400" height="400" />
-
-|     |  **Normal** | **Nodule** |
-|------|---------|---------|
-| **Precision**| 0.7755102| 0.55555556 |
-|**Recall**| 0.76 | 0.57692308 |
-
-**Accuracy** : **69.3333 %**
+**Accuracy** : **72.02 %**
 
 ## DataSet
-[openi.nlm.nih.gov](https://openi.nlm.nih.gov/gridquery.php?q=&it=x,xg&sub=x&m=1&n=101) has a large base of Xray,MRI, CT scan images publically available.Specifically Chest Xray Images have been scraped, Normal and Nodule labbeled images are futher extrated for this task.
+[openi.nlm.nih.gov](https://openi.nlm.nih.gov/gridquery.php?q=&it=x,xg&sub=x&m=1&n=101) has a large base of X-Ray,MRI, CT scan images publically available.Specifically Chest Xray dataset used.
 
 ## How to use ?
-The above code can be used for **Deep Transfer Learning** on any Image dataset to train using Inception-BN as the PreTrained network. You can also use any of the models in the MXNet model library to run this code.  It has been tested with Resnet-34 and resnet-50 as well
+This code can be used for **Deep Transfer Learning** on any X-Ray dataset to train using Inception-BN as the PreTrained network. You can also use any of the models in the MXNet model library to run this code.  It has been tested with Resnet-34 and resnet-50 as well.
 ### Steps to follow 
 
 1. Get images- Goes to NLM website and recursively walks all pages downloading images and metadata, the images go in "../images_all" the metadata goes in a json file defined in settings.json_data_file. 
@@ -66,27 +57,12 @@ and likewise for test and Val
     Finaly reload complete net and test on validation data
     
     ```python A4_freeze_all_but_last_layer.py```
-    
-  
+
+## Improvements?
+
+> 1. This is a binary classifier, there is no attempt to segment the lungs, this pretraining step may help imensily
+> 2. More data
+> 3. Deeper network (Resnet 150 maybe?)
+> 4. Localization, where nodules are located
 
 
-
-    ```python train_model.py <Training images folder> <Train images codes folder> <Training image labels file> <Folder to         save models>```
-
-
-## Some Predictions
-
-![Alt text](https://github.com/ayush1997/Xvision/blob/master/image/pred.jpg "Optional Title")
-
-## References
-
-> 1. [Learning to Read Chest X-Rays: Recurrent Neural Cascade Model for Automated Image Annotation](https://arxiv.org/pdf/1603.08486.pdf)
-
-> 2. [Deep Convolutional Neural Networks for Computer-Aided Detection: CNN Architectures,
-Dataset Characteristics and Transfer Learning](https://arxiv.org/pdf/1602.03409.pdf)
-
-## Contribute
-
-If you want to contribute and add new feature feel free to send Pull request [here](https://github.com/ayush1997/Xvision/pulls) :D
-
-To report any bugs or request new features, head over to the [Issues page](https://github.com/ayush1997/Xvision/issues)
