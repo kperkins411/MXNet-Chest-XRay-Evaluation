@@ -293,7 +293,7 @@ def main():
     #create model
     cnn_plus_newhead_mod = mx.mod.Module(symbol=cnn_plus_newhead,  context=mx.gpu())
 
-    #bind
+    #bind em
     cnn_plus_newhead_mod.bind(for_training=True, data_shapes=train_itr.provide_data, label_shapes=train_itr.provide_label)
 
     #set params CNN part then FC part
